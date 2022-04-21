@@ -13,8 +13,11 @@ import androidx.annotation.Nullable;
 
 import com.bumptech.glide.Glide;
 
+import java.util.ArrayList;
+
 public class MessageAdapter extends ArrayAdapter<FriendlyMessage> {
-    public MessageAdapter(@NonNull Context context, int resource, @NonNull FriendlyMessage[] objects) {
+
+    public MessageAdapter(@NonNull Context context,int resource, @NonNull ArrayList<FriendlyMessage> objects) {
         super(context, resource, objects);
     }
 
@@ -22,6 +25,8 @@ public class MessageAdapter extends ArrayAdapter<FriendlyMessage> {
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+
+        // inflating the layout of each message item
         if(convertView==null){
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.item_message, parent, false);
         }

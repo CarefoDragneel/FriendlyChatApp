@@ -1,5 +1,7 @@
 package com.example.myapplication;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -14,9 +16,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ListView;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,9 +40,14 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseDatabase mFirebaseDatabase;
     // this is used to access specific part of the database: here, only access messages
     private DatabaseReference mMessageDatabaseReference;
+    // creating a listener to listen to data from the database
+    private ChildEventListener mChildEventListener;
 
     // temporary username
     private String mUserName = "Anonymous";
+
+    //declaring the array adapter
+    private MessageAdapter mMessageAdapter;
 
 
     @Override
@@ -46,11 +59,13 @@ public class MainActivity extends AppCompatActivity {
         mImagePickerButton = (ImageButton) findViewById(R.id.image_picker_button);
         mTextMessageEditText = (EditText) findViewById(R.id.text_message);
         mSendButton = (Button) findViewById(R.id.send_button);
+        ListView list = (ListView) findViewById(R.id.messageListView);
 
         // disabling send button before any text is entered in the text message
         mTextMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                if(s.toString().trim().length()==0) mSendButton.setEnabled(false);
             }
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -66,12 +81,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //creating the arraylist and defining the adapter and attaching it to listView
+        ArrayList<FriendlyMessage> friendlyList = new ArrayList<>();
+        mMessageAdapter = new MessageAdapter(this,R.layout.item_message,friendlyList);
+        list.setAdapter(mMessageAdapter);
+
         // setting limit of the size of text message
         mTextMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(DEFAULT_TEXT_MSG_LENGTH)});
 
         // creating firebase database object to create an access point to the database
         mFirebaseDatabase = FirebaseDatabase.getInstance();
+
         // here create the reference to the 'message' child of the root reference of the database
+        // getReference() method is used to get the reference to the root of the JSON in firebase database
+        // child() method is used to give reference and create a sub-index to the root
         mMessageDatabaseReference = mFirebaseDatabase.getReference().child("message");
 
         // adding click listener to the save button
@@ -85,6 +108,38 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mChildEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                // the data arrives in DataSnapshot type and we need to serialize data into the type we want
+                // here we want it to be of the type FriendlyMessage
+                FriendlyMessage friendlyMessage = snapshot.getValue(FriendlyMessage.class);
+                mMessageAdapter.add(friendlyMessage);
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+
+        // adding listener to the database reference
+        mMessageDatabaseReference.addChildEventListener(mChildEventListener);
 
     }
 
