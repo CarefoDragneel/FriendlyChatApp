@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Friendly Chat</string>
+    <string name="send">SEND</string>
+    <string name="enter_message">Message</string>
+    <string name="overflow_menu_signout">Sign Out</string>
+</resources>
